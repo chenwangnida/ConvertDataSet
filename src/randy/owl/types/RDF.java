@@ -32,7 +32,7 @@ public class RDF {
 	private List<OWLClass> owlClassList = new ArrayList<OWLClass>();
 	private List<OWLInst> owlInstList = new ArrayList<OWLInst>();
 
-	@XmlElement
+	@XmlElement(name = "Ontology", namespace = NamespaceManager.OWL_NAMESPACE)
 	public Ontology getOntology() {
 		return ontology;
 	}

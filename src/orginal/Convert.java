@@ -45,9 +45,9 @@ public class Convert {
 
 	public static void main(String[] args) {
 		Convert cvt = new Convert();
-		cvt.parseWSCServiceFile("./Testset01/services-output.xml");
-		cvt.parseWSCTaskFile("./Testset01/problem.xml");
-		cvt.parseWSCTaxonomyFile("./Testset01/taxonomy.xml");
+		// cvt.parseWSCServiceFile("./Testset01/services-output.xml");
+		// cvt.parseWSCTaskFile("./Testset01/problem.xml");
+		 cvt.parseWSCTaxonomyFile("./Testset01/taxonomy.xml");
 //		cvt.parseWSCTaxonomyFile("./01/taxonomy.xml");
 	}
 
@@ -192,10 +192,6 @@ public class Convert {
 
 	private void CreateMECE(Map<String, Node> serviceMap2) {
 
-
-
-
-
 	}
 
 	/**
@@ -277,8 +273,10 @@ public class Convert {
 
 				owlClass.setID(key);
 				String resource = taxonomyMap.get(key).parents.get(0).getValue();
-				owlSubClassOf.setResource(resource);
-				owlClass.setSubClassOf(owlSubClassOf);
+				if (!resource.equals("")) {
+					owlSubClassOf.setResource("#" + resource);
+					owlClass.setSubClassOf(owlSubClassOf);
+				}
 
 				owlClassList.add(owlClass);
 
@@ -288,19 +286,20 @@ public class Convert {
 				owlInst.setID(key);
 				String rdfTypeStr = taxonomyMap.get(key).parents.get(0).getValue();
 				RDFType rdftype = new RDFType();
-				rdftype.setResource(rdfTypeStr);
+				rdftype.setResource("#" + rdfTypeStr);
 				owlInst.setRdfType(rdftype);
 
 				owlInstList.add(owlInst);
 			}
 
 		}
-		System.out.println("No.Concept: "+owlClassList.size());
+		System.out.println("No.Concept: " + owlClassList.size());
 
 		rdf.setOwlClassList(owlClassList);
 		rdf.setOwlInstList(owlInstList);
 
-		File file = new File("CovertTestSet01/taxonomy.owl");// ./Testset01/services-output.xml
+//		File file = new File("Testconvertdataset/taxonomy.owl");
+		File file = new File("CovertTestSet01/taxonomy.owl");
 		JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
 		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -308,7 +307,7 @@ public class Convert {
 		jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
 		jaxbMarshaller.marshal(rdf, file);
-//		jaxbMarshaller.marshal(rdf, System.out);
+		jaxbMarshaller.marshal(rdf, System.out);
 
 	}
 

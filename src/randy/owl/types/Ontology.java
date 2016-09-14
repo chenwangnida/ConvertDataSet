@@ -2,12 +2,14 @@ package randy.owl.types;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
+import randy.NamespaceManager;
+
 public class Ontology {
-	
-	
+
+
 	private String about;
-	
-	@XmlAttribute
+
+	@XmlAttribute(namespace = NamespaceManager.RDF_NAMESPACE)
 	public String getAbout() {
 		return about;
 	}

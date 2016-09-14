@@ -179,6 +179,8 @@ public class Convert {
 				outputs = new HashSet<String>();
 				qos = new double[4];
 			}
+
+			CreateMECE(serviceMap);
 		} catch (IOException ioe) {
 			System.out.println("Service file parsing failed...");
 		} catch (ParserConfigurationException e) {
@@ -186,6 +188,14 @@ public class Convert {
 		} catch (SAXException e) {
 			System.out.println("Service file parsing failed...");
 		}
+	}
+
+	private void CreateMECE(Map<String, Node> serviceMap2) {
+
+
+
+
+
 	}
 
 	/**

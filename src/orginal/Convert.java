@@ -47,8 +47,11 @@ public class Convert {
 		Convert cvt = new Convert();
 		// cvt.parseWSCServiceFile("./Testset01/services-output.xml");
 		// cvt.parseWSCTaskFile("./Testset01/problem.xml");
-		 cvt.parseWSCTaxonomyFile("./Testset01/taxonomy.xml");
-//		cvt.parseWSCTaxonomyFile("./01/taxonomy.xml");
+		// cvt.parseWSCTaxonomyFile("./Testset01/taxonomy.xml");
+
+		cvt.parseWSCTaxonomyFile("./debugTestDataSet/testTaxonomySet.xml");
+
+		// cvt.parseWSCTaxonomyFile("./01/taxonomy.xml");
 	}
 
 	public static Set<String> getTaskInput() {
@@ -213,7 +216,7 @@ public class Convert {
 			System.out.println(taxonomyMap.size());
 
 			// generate a new Ontology files
-			createXML(taxonomyMap);
+			createDebugXML(taxonomyMap);
 
 		}
 
@@ -226,6 +229,8 @@ public class Convert {
 		} catch (JAXBException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			File file = new File("CovertTestSet01/taxonomy.owl");
+
 		}
 	}
 
@@ -298,8 +303,64 @@ public class Convert {
 		rdf.setOwlClassList(owlClassList);
 		rdf.setOwlInstList(owlInstList);
 
-//		File file = new File("Testconvertdataset/taxonomy.owl");
-		File file = new File("CovertTestSet01/taxonomy.owl");
+		// File file = new File("Testconvertdataset/taxonomy.owl");
+		File file = new File("debugTestDataSet/taxonomySet.owl");
+		JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
+		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+		// output pretty printed
+		jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+		jaxbMarshaller.marshal(rdf, file);
+		jaxbMarshaller.marshal(rdf, System.out);
+
+	}
+
+	public void createDebugXML(Map<String, TaxonomyNode> taxonomyMap) throws JAXBException {
+
+		System.out.println(taxonomyMap.size());
+
+		RDF rdf = new RDF();
+		Ontology ontology = new Ontology();
+		List<OWLClass> owlClassList = new ArrayList<OWLClass>();
+		List<OWLInst> owlInstList = new ArrayList<OWLInst>();
+
+		ontology.setAbout("");
+		rdf.setOntology(ontology);
+
+		for (String key : taxonomyMap.keySet()) {
+			if (key.contains("@")) {
+				OWLClass owlClass = new OWLClass();
+				OWLSubClassOf owlSubClassOf = new OWLSubClassOf();
+
+				owlClass.setID(key.substring(1));
+				String resource = taxonomyMap.get(key).parents.get(0).getValue();
+				if (!resource.equals("")) {
+					owlSubClassOf.setResource("#" + resource);
+					owlClass.setSubClassOf(owlSubClassOf);
+				}
+
+				owlClassList.add(owlClass);
+
+			} if (key.contains("$")) {
+				OWLInst owlInst = new OWLInst();
+				owlInst.setID(key.substring(1));
+				String rdfTypeStr = taxonomyMap.get(key).parents.get(0).getValue();
+				RDFType rdftype = new RDFType();
+				rdftype.setResource("#" + rdfTypeStr);
+				owlInst.setRdfType(rdftype);
+
+				owlInstList.add(owlInst);
+			}
+
+		}
+		System.out.println("No.Concept: " + owlClassList.size());
+
+		rdf.setOwlClassList(owlClassList);
+		rdf.setOwlInstList(owlInstList);
+
+		// File file = new File("Testconvertdataset/taxonomy.owl");
+		File file = new File("debugTestDataSet/taxonomySet.owl");
 		JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
 		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 

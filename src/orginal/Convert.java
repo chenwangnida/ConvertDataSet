@@ -47,7 +47,7 @@ public class Convert {
 		Convert cvt = new Convert();
 		// cvt.parseWSCServiceFile("./Testset01/services-output.xml");
 		// cvt.parseWSCTaskFile("./Testset01/problem.xml");
-		 cvt.parseWSCTaxonomyFile("./wsc2008/Set03MetaData/taxonomy.xml");
+		 cvt.parseWSCTaxonomyFile("./Testset05/taxonomy.xml");
 
 //		cvt.parseWSCTaxonomyFile("./debugTestDataSet/testTaxonomySet.xml");
 
@@ -304,7 +304,7 @@ public class Convert {
 		rdf.setOwlInstList(owlInstList);
 
 		// File file = new File("Testconvertdataset/taxonomy.owl");
-		 File file = new File("WSC08TestSet03/taxonomy.owl");
+		 File file = new File("WSC09TestSet05/taxonomy.owl");
 		JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
 		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 

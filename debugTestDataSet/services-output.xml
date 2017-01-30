@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<services>
+    <service Ava="0.85" Pri="7.06" Rel="0.64" Res="254.12" name="HotelFunctionsService">
+        <inputs>
+            <instance name="HotelCheckinDate"/>
+            <instance name="HotelCheckoutDate"/>
+        </inputs>
+        <outputs>
+            <instance name="HotelReservation"/>
+        </outputs>
+    </service>
+    <service Ava="0.68" Pri="5.36" Rel="0.5" Res="1306.83" name="BusService">
+        <inputs>
+            <instance name="BusDestinationCity"/>
+            <instance name="BusDepartureDate"/>
+        </inputs>
+        <outputs>
+            <instance name="BusTicket"/>
+        </outputs>
+    </service>
+    <service Ava="0.73" Pri="2.43" Rel="0.71" Res="463.54" name="FlightInformation">
+        <inputs>
+            <instance name="FlightReturnDate"/>
+            <instance name="FlightOriginCity"/>
+            <instance name="FlightDepartureDate"/>
+            <instance name="FlightDestinationCity"/>
+        </inputs>
+        <outputs>
+            <instance name="FlightArrivalDate"/>
+        </outputs>
+    </service>
+    <service Ava="0.51" Pri="7.17" Rel="0.34" Res="3036.15" name="GenerateMapService">
+        <inputs>
+            <instance name="MappedLocation"/>
+        </inputs>
+        <outputs>
+            <instance name="StreetMap"/>
+        </outputs>
+    </service>
+</services>

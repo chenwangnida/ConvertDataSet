@@ -1,6 +1,7 @@
 package orginal;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,6 +16,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -40,16 +47,24 @@ public class Convert {
 	public static Set<String> taskInput;
 	public static Set<String> taskOutput;
 
-	public Map<String, Node> serviceMap = new HashMap<String, Node>();
+	public static Map<String, Node> serviceMap = new HashMap<String, Node>();
+	public static Map<String, Node> OWLTCMap = new HashMap<String, Node>();
+
 	public Map<String, TaxonomyNode> taxonomyMap = new HashMap<String, TaxonomyNode>();
 
 	public static void main(String[] args) {
 		Convert cvt = new Convert();
-		// cvt.parseWSCServiceFile("./Testset01/services-output.xml");
 		// cvt.parseWSCTaskFile("./Testset01/problem.xml");
-		 cvt.parseWSCTaxonomyFile("./Testset05/taxonomy.xml");
 
-//		cvt.parseWSCTaxonomyFile("./debugTestDataSet/testTaxonomySet.xml");
+		// /ConvertDataSet/owlstc01/owlsTCTaxonomy.xml
+		// cvt.parseWSCTaxonomyFile("./owlstc01/owlsTCTaxonomy.xml");
+		cvt.parseOWLServiceFile("./owlstc01/owlsTCServices.xml");
+		cvt.parseWSCServiceFile("./Testset05/services-output.xml");
+		cvt.CreateMECE(serviceMap);
+
+		// cvt.CreateMECE(null);
+
+		// cvt.parseWSCTaxonomyFile("./debugTestDataSet/testTaxonomySet.xml");
 
 		// cvt.parseWSCTaxonomyFile("./01/taxonomy.xml");
 	}
@@ -183,7 +198,66 @@ public class Convert {
 				qos = new double[4];
 			}
 
-			CreateMECE(serviceMap);
+		} catch (IOException ioe) {
+			System.out.println("Service file parsing failed...");
+		} catch (ParserConfigurationException e) {
+			System.out.println("Service file parsing failed...");
+		} catch (SAXException e) {
+			System.out.println("Service file parsing failed...");
+		}
+	}
+
+	private void parseOWLServiceFile(String fileName) {
+		Set<String> inputs = new HashSet<String>();
+		Set<String> outputs = new HashSet<String>();
+		double[] qos = new double[4];
+
+		try {
+			File fXmlFile = new File(fileName);
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+			Document doc = dBuilder.parse(fXmlFile);
+
+			NodeList nList = doc.getElementsByTagName("service");
+
+			for (int i = 0; i < nList.getLength(); i++) {
+				org.w3c.dom.Node nNode = nList.item(i);
+				Element eElement = (Element) nNode;
+				// service name, for example serv904934656
+				String name = eElement.getAttribute("name");
+
+				// qos[TIME] = Double.valueOf(eElement.getAttribute("Res"));
+				// qos[COST] = Double.valueOf(eElement.getAttribute("Pri"));
+				// qos[AVAILABILITY] =
+				// Double.valueOf(eElement.getAttribute("Ava"));
+				// qos[RELIABILITY] =
+				// Double.valueOf(eElement.getAttribute("Rel"));
+
+				// Get inputs, instance name, for example inst995667695
+				org.w3c.dom.Node inputNode = eElement.getElementsByTagName("inputs").item(0);
+				NodeList inputNodes = ((Element) inputNode).getElementsByTagName("instance");
+				for (int j = 0; j < inputNodes.getLength(); j++) {
+					org.w3c.dom.Node in = inputNodes.item(j);
+					Element e = (Element) in;
+					inputs.add(e.getAttribute("name"));
+				}
+
+				// Get outputs instance name, for example inst1348768777
+				org.w3c.dom.Node outputNode = eElement.getElementsByTagName("outputs").item(0);
+				NodeList outputNodes = ((Element) outputNode).getElementsByTagName("instance");
+				for (int j = 0; j < outputNodes.getLength(); j++) {
+					org.w3c.dom.Node out = outputNodes.item(j);
+					Element e = (Element) out;
+					outputs.add(e.getAttribute("name"));
+				}
+
+				Node ws = new Node(name, qos, inputs, outputs);
+				OWLTCMap.put(name, ws);
+				inputs = new HashSet<String>();
+				outputs = new HashSet<String>();
+				qos = new double[4];
+			}
+
 		} catch (IOException ioe) {
 			System.out.println("Service file parsing failed...");
 		} catch (ParserConfigurationException e) {
@@ -194,6 +268,96 @@ public class Convert {
 	}
 
 	private void CreateMECE(Map<String, Node> serviceMap2) {
+		
+		List<Node> OWLTCMapList = new ArrayList<Node>();
+		OWLTCMapList.addAll(OWLTCMap.values());
+		
+		List<Node> serviceMapList = new ArrayList<Node>();
+		serviceMapList.addAll(serviceMap.values());
+		
+		
+		
+		for(int i=0; i<OWLTCMapList.size();i++){		
+
+			double[] qos = new double[4];                                                                     
+			qos = serviceMapList.get(i).getQos();		
+			OWLTCMapList.get(i).setQos(qos);			
+		}
+		
+
+		
+		
+		
+		
+		Document dom;
+
+		// instance of a DocumentBuilderFactory
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		try {
+			// use factory to get an instance of document builder
+			DocumentBuilder db = dbf.newDocumentBuilder();
+			// create instance of DOM
+			dom = db.newDocument();
+
+			// create the root element
+			Element rootEle = dom.createElement("services");
+
+			// create data elements and place them under root
+			
+
+			for (Node node : OWLTCMapList) {
+
+				Element e = dom.createElement("service");
+				e.setAttribute("name", node.getName());
+				e.setAttribute("Res", node.getQos()[TIME] + "");
+				e.setAttribute("Ava", node.getQos()[AVAILABILITY] + "");
+				e.setAttribute("Rel", node.getQos()[RELIABILITY] + "");
+				e.setAttribute("Pri", node.getQos()[COST] + "");
+
+				Element inputs = dom.createElement("inputs");
+				e.appendChild(inputs);
+				for (String in : node.getInputs()) {
+					Element instance = dom.createElement("instance");
+					instance.setAttribute("name", in);
+					inputs.appendChild(instance);
+
+				}
+
+				Element outputs = dom.createElement("outputs");
+				e.appendChild(outputs);
+				for (String ou : node.getOutputs()) {
+
+					Element instance1 = dom.createElement("instance");
+					instance1.setAttribute("name", ou);
+
+					outputs.appendChild(instance1);
+
+				}
+
+				rootEle.appendChild(e);
+			}
+			dom.appendChild(rootEle);
+
+			try {
+				Transformer tr = TransformerFactory.newInstance().newTransformer();
+				tr.setOutputProperty(OutputKeys.INDENT, "yes");
+				tr.setOutputProperty(OutputKeys.METHOD, "xml");
+				tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+				// tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "roles.dtd");
+				tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+
+				// send DOM to file
+				tr.transform(new DOMSource(dom),
+						new StreamResult(new FileOutputStream("owlstc01/services-output.xml")));
+
+			} catch (TransformerException te) {
+				System.out.println(te.getMessage());
+			} catch (IOException ioe) {
+				System.out.println(ioe.getMessage());
+			}
+		} catch (ParserConfigurationException pce) {
+			System.out.println("UsersXML: Error trying to instantiate DocumentBuilder " + pce);
+		}
 
 	}
 
@@ -216,7 +380,8 @@ public class Convert {
 			System.out.println(taxonomyMap.size());
 
 			// generate a new Ontology files
-			createXML(taxonomyMap);
+			// createXML(taxonomyMap);
+			createXML4OWLTC(taxonomyMap);
 
 		}
 
@@ -258,6 +423,70 @@ public class Convert {
 			}
 		}
 	}
+
+	// create XML for OWLTC
+	public void createXML4OWLTC(Map<String, TaxonomyNode> taxonomyMap) throws JAXBException {
+
+		System.out.println(taxonomyMap.size());
+
+		RDF rdf = new RDF();
+		Ontology ontology = new Ontology();
+		List<OWLClass> owlClassList = new ArrayList<OWLClass>();
+		List<OWLInst> owlInstList = new ArrayList<OWLInst>();
+
+		ontology.setAbout("");
+		rdf.setOntology(ontology);
+
+		for (String key : taxonomyMap.keySet()) {
+
+			if (!key.equals("")) {
+				// if (key.contains("con")) {
+				OWLClass owlClass = new OWLClass();
+				OWLSubClassOf owlSubClassOf = new OWLSubClassOf();
+				System.out.println(key + ":key");
+
+				owlClass.setID(key);
+				String resource = taxonomyMap.get(key).parents.get(0).getValue();
+				if (!resource.equals("")) {
+					owlSubClassOf.setResource("#" + resource);
+					owlClass.setSubClassOf(owlSubClassOf);
+				}
+
+				owlClassList.add(owlClass);
+
+				// }
+				// if (key.contains("inst")) {
+				OWLInst owlInst = new OWLInst();
+				owlInst.setID(key);
+				String rdfTypeStr = taxonomyMap.get(key).parents.get(0).getValue();
+				RDFType rdftype = new RDFType();
+				rdftype.setResource("#" + rdfTypeStr);
+				owlInst.setRdfType(rdftype);
+
+				owlInstList.add(owlInst);
+				// }
+			}
+
+		}
+		System.out.println("No.Concept: " + owlClassList.size());
+
+		rdf.setOwlClassList(owlClassList);
+		rdf.setOwlInstList(owlInstList);
+
+		// File file = new File("Testconvertdataset/taxonomy.owl");
+		File file = new File("WSC09TestSet05/taxonomy.owl");
+		JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
+		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+		// output pretty printed
+		jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+		jaxbMarshaller.marshal(rdf, file);
+		jaxbMarshaller.marshal(rdf, System.out);
+
+	}
+
+	// create XML for WSC
 
 	public void createXML(Map<String, TaxonomyNode> taxonomyMap) throws JAXBException {
 
@@ -304,7 +533,7 @@ public class Convert {
 		rdf.setOwlInstList(owlInstList);
 
 		// File file = new File("Testconvertdataset/taxonomy.owl");
-		 File file = new File("WSC09TestSet05/taxonomy.owl");
+		File file = new File("WSC09TestSet05/taxonomy.owl");
 		JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
 		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -316,60 +545,61 @@ public class Convert {
 
 	}
 
-//	public void createDebugXML(Map<String, TaxonomyNode> taxonomyMap) throws JAXBException {
-//
-//		System.out.println(taxonomyMap.size());
-//
-//		RDF rdf = new RDF();
-//		Ontology ontology = new Ontology();
-//		List<OWLClass> owlClassList = new ArrayList<OWLClass>();
-//		List<OWLInst> owlInstList = new ArrayList<OWLInst>();
-//
-//		ontology.setAbout("");
-//		rdf.setOntology(ontology);
-//
-//		for (String key : taxonomyMap.keySet()) {
-//			if (key.contains("@")) {
-//				OWLClass owlClass = new OWLClass();
-//				OWLSubClassOf owlSubClassOf = new OWLSubClassOf();
-//
-//				owlClass.setID(key.substring(1));
-//				String resource = taxonomyMap.get(key).parents.get(0).getValue();
-//				if (!resource.equals("")) {
-//					owlSubClassOf.setResource("#" + resource);
-//					owlClass.setSubClassOf(owlSubClassOf);
-//				}
-//
-//				owlClassList.add(owlClass);
-//
-//			} if (key.contains("$")) {
-//				OWLInst owlInst = new OWLInst();
-//				owlInst.setID(key.substring(1));
-//				String rdfTypeStr = taxonomyMap.get(key).parents.get(0).getValue();
-//				RDFType rdftype = new RDFType();
-//				rdftype.setResource("#" + rdfTypeStr);
-//				owlInst.setRdfType(rdftype);
-//
-//				owlInstList.add(owlInst);
-//			}
-//
-//		}
-//		System.out.println("No.Concept: " + owlClassList.size());
-//
-//		rdf.setOwlClassList(owlClassList);
-//		rdf.setOwlInstList(owlInstList);
-//
-//		 File file = new File("CovertTestSet02/taxonomy.owl");
-////		File file = new File("debugTestDataSet/taxonomySet.owl");
-//		JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
-//		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-//
-//		// output pretty printed
-//		jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//
-//		jaxbMarshaller.marshal(rdf, file);
-//		jaxbMarshaller.marshal(rdf, System.out);
-//
-//	}
+	// public void createDebugXML(Map<String, TaxonomyNode> taxonomyMap) throws
+	// JAXBException {
+	//
+	// System.out.println(taxonomyMap.size());
+	//
+	// RDF rdf = new RDF();
+	// Ontology ontology = new Ontology();
+	// List<OWLClass> owlClassList = new ArrayList<OWLClass>();
+	// List<OWLInst> owlInstList = new ArrayList<OWLInst>();
+	//
+	// ontology.setAbout("");
+	// rdf.setOntology(ontology);
+	//
+	// for (String key : taxonomyMap.keySet()) {
+	// if (key.contains("@")) {
+	// OWLClass owlClass = new OWLClass();
+	// OWLSubClassOf owlSubClassOf = new OWLSubClassOf();
+	//
+	// owlClass.setID(key.substring(1));
+	// String resource = taxonomyMap.get(key).parents.get(0).getValue();
+	// if (!resource.equals("")) {
+	// owlSubClassOf.setResource("#" + resource);
+	// owlClass.setSubClassOf(owlSubClassOf);
+	// }
+	//
+	// owlClassList.add(owlClass);
+	//
+	// } if (key.contains("$")) {
+	// OWLInst owlInst = new OWLInst();
+	// owlInst.setID(key.substring(1));
+	// String rdfTypeStr = taxonomyMap.get(key).parents.get(0).getValue();
+	// RDFType rdftype = new RDFType();
+	// rdftype.setResource("#" + rdfTypeStr);
+	// owlInst.setRdfType(rdftype);
+	//
+	// owlInstList.add(owlInst);
+	// }
+	//
+	// }
+	// System.out.println("No.Concept: " + owlClassList.size());
+	//
+	// rdf.setOwlClassList(owlClassList);
+	// rdf.setOwlInstList(owlInstList);
+	//
+	// File file = new File("CovertTestSet02/taxonomy.owl");
+	//// File file = new File("debugTestDataSet/taxonomySet.owl");
+	// JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
+	// Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+	//
+	// // output pretty printed
+	// jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	//
+	// jaxbMarshaller.marshal(rdf, file);
+	// jaxbMarshaller.marshal(rdf, System.out);
+	//
+	// }
 
 }

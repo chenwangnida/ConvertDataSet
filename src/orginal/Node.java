@@ -35,6 +35,18 @@ public class Node implements Cloneable {
 		this.name = name;
 	}
 
+	public void setQos(double[] qos) {
+		this.qos = qos;
+	}
+
+	public void setInputs(Set<String> inputs) {
+		this.inputs = inputs;
+	}
+
+	public void setOutputs(Set<String> outputs) {
+		this.outputs = outputs;
+	}
+
 	public Node clone() {
 		return new Node(name, qos, inputs, outputs);
 	}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE services SYSTEM "roles.dtd">
+<services>
+    <service Ava="0.54" Lat="72.97" Pri="5.41" Rel="0.48" Res="4982.91" Suc="0.56" name="serName">
+        <inputs>
+            <instance instance="inst1398150856"/>
+            <instance instance="inst2321521236"/>
+        </inputs>
+        <outputs/>
+    </service>
+</services>

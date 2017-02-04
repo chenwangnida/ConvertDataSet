@@ -57,10 +57,10 @@ public class Convert {
 		// cvt.parseWSCTaskFile("./Testset01/problem.xml");
 
 		// /ConvertDataSet/owlstc01/owlsTCTaxonomy.xml
-		// cvt.parseWSCTaxonomyFile("./owlstc01/owlsTCTaxonomy.xml");
-		cvt.parseOWLServiceFile("./owlstc01/owlsTCServices.xml");
-		cvt.parseWSCServiceFile("./Testset05/services-output.xml");
-		cvt.CreateMECE(serviceMap);
+		 cvt.parseWSCTaxonomyFile("./owlstc01/owlsTCTaxonomy.xml");
+//		cvt.parseOWLServiceFile("./owlstc01/owlsTCServices.xml");
+//		cvt.parseWSCServiceFile("./Testset05/services-output.xml");
+//		cvt.CreateMECE(serviceMap);
 
 		// cvt.CreateMECE(null);
 
@@ -443,7 +443,7 @@ public class Convert {
 				// if (key.contains("con")) {
 				OWLClass owlClass = new OWLClass();
 				OWLSubClassOf owlSubClassOf = new OWLSubClassOf();
-				System.out.println(key + ":key");
+//				System.out.println(key + ":key");
 
 				owlClass.setID(key);
 				String resource = taxonomyMap.get(key).parents.get(0).getValue();
@@ -458,7 +458,9 @@ public class Convert {
 				// if (key.contains("inst")) {
 				OWLInst owlInst = new OWLInst();
 				owlInst.setID(key);
-				String rdfTypeStr = taxonomyMap.get(key).parents.get(0).getValue();
+//				String rdfTypeStr = taxonomyMap.get(key).parents.get(0).getValue();
+				String rdfTypeStr = taxonomyMap.get(key).getValue();
+
 				RDFType rdftype = new RDFType();
 				rdftype.setResource("#" + rdfTypeStr);
 				owlInst.setRdfType(rdftype);
@@ -474,7 +476,7 @@ public class Convert {
 		rdf.setOwlInstList(owlInstList);
 
 		// File file = new File("Testconvertdataset/taxonomy.owl");
-		File file = new File("WSC09TestSet05/taxonomy.owl");
+		File file = new File("owlstc01/taxonomy.owl");
 		JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
 		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -482,7 +484,7 @@ public class Convert {
 		jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
 		jaxbMarshaller.marshal(rdf, file);
-		jaxbMarshaller.marshal(rdf, System.out);
+//		jaxbMarshaller.marshal(rdf, System.out);
 
 	}
 

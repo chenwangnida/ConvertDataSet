@@ -57,7 +57,7 @@ public class Convert {
 		// cvt.parseWSCTaskFile("./Testset01/problem.xml");
 
 		// /ConvertDataSet/owlstc01/owlsTCTaxonomy.xml
-		 cvt.parseWSCTaxonomyFile("./owlstc01/owlsTCTaxonomy.xml");
+		 cvt.parseWSCTaxonomyFile("./WSC08TestSet08/taxonomy.xml");
 //		cvt.parseOWLServiceFile("./owlstc01/owlsTCServices.xml");
 //		cvt.parseWSCServiceFile("./Testset05/services-output.xml");
 //		cvt.CreateMECE(serviceMap);
@@ -380,8 +380,8 @@ public class Convert {
 			System.out.println(taxonomyMap.size());
 
 			// generate a new Ontology files
-			// createXML(taxonomyMap);
-			createXML4OWLTC(taxonomyMap);
+			 createXML(taxonomyMap);
+//			createXML4OWLTC(taxonomyMap);
 
 		}
 
@@ -535,7 +535,7 @@ public class Convert {
 		rdf.setOwlInstList(owlInstList);
 
 		// File file = new File("Testconvertdataset/taxonomy.owl");
-		File file = new File("WSC09TestSet05/taxonomy.owl");
+		File file = new File("WSC08TestSet08/taxonomy.owl");
 		JAXBContext jaxbContext = JAXBContext.newInstance(RDF.class);
 		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 

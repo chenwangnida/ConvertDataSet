@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data-sources>
+	<data-source id="derby-15b55f8dd82-2147243369045786" provider="generic" driver="derby" name="Derby - derby" save-password="true" show-system-objects="true" read-only="false">
+		<connection server="" database="/Users/chenwang/Documents/workspace/camel-etl/target/derby" url="jdbc:derby:/Users/chenwang/Documents/workspace/camel-etl/target/derby" type="dev"/>
+	</data-source>
+</data-sources>

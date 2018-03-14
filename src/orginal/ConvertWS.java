@@ -52,8 +52,8 @@ public class ConvertWS {
 	public Map<String, TaxonomyNode> taxonomyMap = new HashMap<String, TaxonomyNode>();
 
 	public static String qwsFilePath = "/Users/chenwang/Documents/Dataset/qws/QWS_Dataset_v2.txt";
-	public static String wscFilePath = "./WSC08TestSet01/services-output.xml";
-	public static String outputPath = "services-output.xml";
+	public static String wscFilePath = "./WSC08TestSet08/services-output.xml";
+	public static String outputPath = "services-output08.xml";
 
 	public static void main(String[] args) {
 		GenerateQoS qosGenerator = new GenerateQoS();
@@ -148,6 +148,10 @@ public class ConvertWS {
 
 				Node ws = new Node(name, qos, inputs, outputs);
 				serviceMap.put(name, ws);
+				
+				Node ws_copy = ws.clone(qosGenerator);
+				serviceMap.put(ws_copy.getName(), ws_copy);
+				
 				inputs = new HashSet<String>();
 				outputs = new HashSet<String>();
 				qos = new double[4];

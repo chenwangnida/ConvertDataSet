@@ -36,7 +36,7 @@ import randy.owl.types.Ontology;
 import randy.owl.types.RDF;
 import randy.owl.types.RDFType;
 
-public class Convert {
+public class ConvertWS {
 
 	// Constants with of order of QoS attributes
 	public static final int TIME = 0;
@@ -48,26 +48,21 @@ public class Convert {
 	public static Set<String> taskOutput;
 
 	public static Map<String, Node> serviceMap = new HashMap<String, Node>();
-	public static Map<String, Node> OWLTCMap = new HashMap<String, Node>();
 
 	public Map<String, TaxonomyNode> taxonomyMap = new HashMap<String, TaxonomyNode>();
 
+	public static String qwsFilePath = "/Users/chenwang/Documents/Dataset/qws/QWS_Dataset_v2.txt";
+	public static String wscFilePath = "./WSC08TestSet01/services-output.xml";
+	public static String outputPath = "services-output.xml";
+
 	public static void main(String[] args) {
-		Convert cvt = new Convert();
-		// cvt.parseWSCTaskFile("./Testset01/problem.xml");
+		GenerateQoS qosGenerator = new GenerateQoS();
+		qosGenerator.parsesQWS();
+		qosGenerator.parseWSC();
 
-		// /ConvertDataSet/owlstc01/owlsTCTaxonomy.xml
-		//corret one for passTaxonomy
-//		 cvt.parseWSCTaxonomyFile("./WSC08TestSet08/taxonomy.xml");
-//		cvt.parseOWLServiceFile("./owlstc01/owlsTCServices.xml");
-		cvt.parseWSCServiceFile("./Testset05/services-output.xml");
-		//		cvt.CreateMECE(serviceMap);
-
-		// cvt.CreateMECE(null);
-
-		// cvt.parseWSCTaxonomyFile("./debugTestDataSet/testTaxonomySet.xml");
-
-		// cvt.parseWSCTaxonomyFile("./01/taxonomy.xml");
+		ConvertWS cvt = new ConvertWS();
+		cvt.parseWSCServiceFile(qosGenerator);
+		cvt.createMECE();
 	}
 
 	public static Set<String> getTaskInput() {
@@ -75,7 +70,7 @@ public class Convert {
 	}
 
 	public static void setTaskInput(Set<String> taskInput) {
-		Convert.taskInput = taskInput;
+		ConvertWS.taskInput = taskInput;
 	}
 
 	public static Set<String> getTaskOutput() {
@@ -83,7 +78,7 @@ public class Convert {
 	}
 
 	public static void setTaskOutput(Set<String> taskOutput) {
-		Convert.taskOutput = taskOutput;
+		ConvertWS.taskOutput = taskOutput;
 	}
 
 	public Map<String, Node> getServiceMap() {
@@ -103,60 +98,19 @@ public class Convert {
 	}
 
 	/**
-	 * Parses the WSC task file with the given name, extracting input and output
-	 * values to be used as the composition task.
+	 * Parses the WSC Web service file with the given name, creating Web services
+	 * based on this information and saving them to the service map.
+	 * @param qosGenerator 
 	 *
 	 * @param fileName
 	 */
-	private void parseWSCTaskFile(String fileName) {
-		try {
-			File fXmlFile = new File(fileName);
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			Document doc = dBuilder.parse(fXmlFile);
-
-			org.w3c.dom.Node provided = doc.getElementsByTagName("provided").item(0);
-			NodeList providedList = ((Element) provided).getElementsByTagName("instance");
-			taskInput = new HashSet<String>();
-			for (int i = 0; i < providedList.getLength(); i++) {
-				org.w3c.dom.Node item = providedList.item(i);
-				Element e = (Element) item;
-				taskInput.add(e.getAttribute("name"));
-			}
-
-			org.w3c.dom.Node wanted = doc.getElementsByTagName("wanted").item(0);
-			NodeList wantedList = ((Element) wanted).getElementsByTagName("instance");
-			taskOutput = new HashSet<String>();
-			for (int i = 0; i < wantedList.getLength(); i++) {
-				org.w3c.dom.Node item = wantedList.item(i);
-				Element e = (Element) item;
-				taskOutput.add(e.getAttribute("name"));
-			}
-		} catch (ParserConfigurationException e) {
-			System.out.println("Task file parsing failed...");
-			e.printStackTrace();
-		} catch (SAXException e) {
-			System.out.println("Task file parsing failed...");
-			e.printStackTrace();
-		} catch (IOException e) {
-			System.out.println("Task file parsing failed...");
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Parses the WSC Web service file with the given name, creating Web
-	 * services based on this information and saving them to the service map.
-	 *
-	 * @param fileName
-	 */
-	private void parseWSCServiceFile(String fileName) {
+	private void parseWSCServiceFile(GenerateQoS qosGenerator) {
 		Set<String> inputs = new HashSet<String>();
 		Set<String> outputs = new HashSet<String>();
 		double[] qos = new double[4];
 
 		try {
-			File fXmlFile = new File(fileName);
+			File fXmlFile = new File(wscFilePath);
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			Document doc = dBuilder.parse(fXmlFile);
@@ -169,10 +123,10 @@ public class Convert {
 				// service name, for example serv904934656
 				String name = eElement.getAttribute("name");
 
-				qos[TIME] = Double.valueOf(eElement.getAttribute("Res"));
-				qos[COST] = Double.valueOf(eElement.getAttribute("Pri"));
-				qos[AVAILABILITY] = Double.valueOf(eElement.getAttribute("Ava"));
-				qos[RELIABILITY] = Double.valueOf(eElement.getAttribute("Rel"));
+				qos[TIME] = qosGenerator.timeDistribution.sample();
+				qos[COST] = qosGenerator.costDistribution.sample();
+				qos[AVAILABILITY] = qosGenerator.availDistribution.sample()/100;
+				qos[RELIABILITY] = qosGenerator.reliaDistribution.sample()/100;
 
 				// Get inputs, instance name, for example inst995667695
 				org.w3c.dom.Node inputNode = eElement.getElementsByTagName("inputs").item(0);
@@ -208,88 +162,11 @@ public class Convert {
 		}
 	}
 
-	private void parseOWLServiceFile(String fileName) {
-		Set<String> inputs = new HashSet<String>();
-		Set<String> outputs = new HashSet<String>();
-		double[] qos = new double[4];
+	private void createMECE() {
 
-		try {
-			File fXmlFile = new File(fileName);
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			Document doc = dBuilder.parse(fXmlFile);
-
-			NodeList nList = doc.getElementsByTagName("service");
-
-			for (int i = 0; i < nList.getLength(); i++) {
-				org.w3c.dom.Node nNode = nList.item(i);
-				Element eElement = (Element) nNode;
-				// service name, for example serv904934656
-				String name = eElement.getAttribute("name");
-
-				// qos[TIME] = Double.valueOf(eElement.getAttribute("Res"));
-				// qos[COST] = Double.valueOf(eElement.getAttribute("Pri"));
-				// qos[AVAILABILITY] =
-				// Double.valueOf(eElement.getAttribute("Ava"));
-				// qos[RELIABILITY] =
-				// Double.valueOf(eElement.getAttribute("Rel"));
-
-				// Get inputs, instance name, for example inst995667695
-				org.w3c.dom.Node inputNode = eElement.getElementsByTagName("inputs").item(0);
-				NodeList inputNodes = ((Element) inputNode).getElementsByTagName("instance");
-				for (int j = 0; j < inputNodes.getLength(); j++) {
-					org.w3c.dom.Node in = inputNodes.item(j);
-					Element e = (Element) in;
-					inputs.add(e.getAttribute("name"));
-				}
-
-				// Get outputs instance name, for example inst1348768777
-				org.w3c.dom.Node outputNode = eElement.getElementsByTagName("outputs").item(0);
-				NodeList outputNodes = ((Element) outputNode).getElementsByTagName("instance");
-				for (int j = 0; j < outputNodes.getLength(); j++) {
-					org.w3c.dom.Node out = outputNodes.item(j);
-					Element e = (Element) out;
-					outputs.add(e.getAttribute("name"));
-				}
-
-				Node ws = new Node(name, qos, inputs, outputs);
-				OWLTCMap.put(name, ws);
-				inputs = new HashSet<String>();
-				outputs = new HashSet<String>();
-				qos = new double[4];
-			}
-
-		} catch (IOException ioe) {
-			System.out.println("Service file parsing failed...");
-		} catch (ParserConfigurationException e) {
-			System.out.println("Service file parsing failed...");
-		} catch (SAXException e) {
-			System.out.println("Service file parsing failed...");
-		}
-	}
-
-	private void CreateMECE(Map<String, Node> serviceMap2) {
-		
 		List<Node> OWLTCMapList = new ArrayList<Node>();
-		OWLTCMapList.addAll(OWLTCMap.values());
-		
-		List<Node> serviceMapList = new ArrayList<Node>();
-		serviceMapList.addAll(serviceMap.values());
-		
-		
-		
-		for(int i=0; i<OWLTCMapList.size();i++){		
+		OWLTCMapList.addAll(serviceMap.values());
 
-			double[] qos = new double[4];                                                                     
-			qos = serviceMapList.get(i).getQos();		
-			OWLTCMapList.get(i).setQos(qos);			
-		}
-		
-
-		
-		
-		
-		
 		Document dom;
 
 		// instance of a DocumentBuilderFactory
@@ -304,7 +181,6 @@ public class Convert {
 			Element rootEle = dom.createElement("services");
 
 			// create data elements and place them under root
-			
 
 			for (Node node : OWLTCMapList) {
 
@@ -348,8 +224,7 @@ public class Convert {
 				tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
 				// send DOM to file
-				tr.transform(new DOMSource(dom),
-						new StreamResult(new FileOutputStream("owlstc01/services-output.xml")));
+				tr.transform(new DOMSource(dom), new StreamResult(new FileOutputStream(outputPath)));
 
 			} catch (TransformerException te) {
 				System.out.println(te.getMessage());
@@ -381,8 +256,8 @@ public class Convert {
 			System.out.println(taxonomyMap.size());
 
 			// generate a new Ontology files
-			 createXML(taxonomyMap);
-//			createXML4OWLTC(taxonomyMap);
+			createXML(taxonomyMap);
+			// createXML4OWLTC(taxonomyMap);
 
 		}
 
@@ -444,7 +319,7 @@ public class Convert {
 				// if (key.contains("con")) {
 				OWLClass owlClass = new OWLClass();
 				OWLSubClassOf owlSubClassOf = new OWLSubClassOf();
-//				System.out.println(key + ":key");
+				// System.out.println(key + ":key");
 
 				owlClass.setID(key);
 				String resource = taxonomyMap.get(key).parents.get(0).getValue();
@@ -459,7 +334,7 @@ public class Convert {
 				// if (key.contains("inst")) {
 				OWLInst owlInst = new OWLInst();
 				owlInst.setID(key);
-//				String rdfTypeStr = taxonomyMap.get(key).parents.get(0).getValue();
+				// String rdfTypeStr = taxonomyMap.get(key).parents.get(0).getValue();
 				String rdfTypeStr = taxonomyMap.get(key).getValue();
 
 				RDFType rdftype = new RDFType();
@@ -485,7 +360,7 @@ public class Convert {
 		jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
 		jaxbMarshaller.marshal(rdf, file);
-//		jaxbMarshaller.marshal(rdf, System.out);
+		// jaxbMarshaller.marshal(rdf, System.out);
 
 	}
 

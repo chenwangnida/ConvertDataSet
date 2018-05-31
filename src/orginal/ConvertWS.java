@@ -52,8 +52,8 @@ public class ConvertWS {
 	public Map<String, TaxonomyNode> taxonomyMap = new HashMap<String, TaxonomyNode>();
 
 	public static String qwsFilePath = "/Users/chenwang/Documents/Dataset/qws/QWS_Dataset_v2.txt";
-	public static String wscFilePath = "./WSC08TestSet08/services-output.xml";
-	public static String outputPath = "services-output08.xml";
+	public static String wscFilePath = "./Set05MetaData/services-output.xml";
+	public static String outputPath = "services-output05.xml";
 
 	public static void main(String[] args) {
 		GenerateQoS qosGenerator = new GenerateQoS();
